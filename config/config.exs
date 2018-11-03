@@ -9,7 +9,7 @@ config :bracco_pub_sub, BraccoPubSub.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  pool_size: 10
+  pool_size: 1
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this

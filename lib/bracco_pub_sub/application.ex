@@ -9,7 +9,19 @@ defmodule BraccoPubSub.Application do
     # List all child processes to be supervised
     children = [
       BraccoPubSub.Repo,
-      BraccoPubSub.Listener
+      %{
+        id: Postgrex.Notifications,
+        start: {
+          Postgrex.Notifications,
+          :start_link,
+          [Keyword.put(BraccoPubSub.Repo.config(), :name, :notifier)]
+        }
+      },
+      Plug.Cowboy.child_spec(
+        scheme: :http,
+        plug: BraccoPubSub.Router,
+        options: [port: 4001]
+      )
       # Starts a worker by calling: BraccoPubSub.Worker.start_link(arg)
       # {BraccoPubSub.Worker, arg},
     ]

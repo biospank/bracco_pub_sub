@@ -3,13 +3,16 @@ defmodule BraccoPubSub.Repo do
     otp_app: :bracco_pub_sub,
     adapter: Ecto.Adapters.Postgres
 
-  require Logger
+  # def listen(event_name) do
+  #   with {:ok, pid} <- Postgrex.Notifications.start_link(__MODULE__.config()),
+  #        {:ok, ref} <- Postgrex.Notifications.listen(pid, event_name) do
 
-  def listen(event_name) do
-    with {:ok, pid} <- Postgrex.Notifications.start_link(__MODULE__.config()),
-         {:ok, ref} <- Postgrex.Notifications.listen(pid, event_name) do
+  #     {:ok, pid, ref}
+  #   end
+  # end
 
-      {:ok, pid, ref}
-    end
-  end
+  # def unlisten(pid, ref) do
+  #   Postgrex.Notifications.unlisten(pid, ref)
+  #   Process.exit(pid, :kill)
+  # end
 end
