@@ -1,6 +1,8 @@
 # BraccoPubSub
 
-**TODO: Add description**
+**description**
+
+Subscribe to postgresql LISTEN/NOTIFY and expose sse (Server Sent Event) web endpoint
 
 ## Installation
 
@@ -18,4 +20,3 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/bracco_pub_sub](https://hexdocs.pm/bracco_pub_sub).
-

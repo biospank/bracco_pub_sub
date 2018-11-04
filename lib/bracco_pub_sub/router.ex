@@ -21,13 +21,7 @@ defmodule BraccoPubSub.Router do
 
     # with {:ok, pid, ref} <- listen("tickets_changed") do
     with {:ok, ref} <- Listener.subscribe("tickets_changed") do
-      receive do
-        {:notification, _pid, _ref, "tickets_changed", payload} ->
-          send_message(conn, payload)
-        after :timer.seconds(60) ->
-          send_message(conn, "No available messages")
-      end
-
+      loop(conn)
       Listener.unsubscribe(ref)
     else
       error ->
@@ -35,6 +29,16 @@ defmodule BraccoPubSub.Router do
     end
 
     conn
+  end
+
+  defp loop(conn) do
+    receive do
+      {:notification, _pid, _ref, "tickets_changed", payload} ->
+        send_message(conn, payload)
+        loop(conn)
+      after :timer.seconds(60) ->
+        send_message(conn, "No available messages")
+    end
   end
 
   # defp listen(event_name) do

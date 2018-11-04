@@ -1,12 +1,10 @@
 defmodule BraccoPubSub.Listener do
   def subscribe(event_name) do
-    pid = notifier()
-    Postgrex.Notifications.listen(pid, event_name)
+    Postgrex.Notifications.listen(notifier(), event_name)
   end
 
   def unsubscribe(ref) do
-    pid = notifier()
-    Postgrex.Notifications.unlisten(pid, ref)
+    Postgrex.Notifications.unlisten(notifier(), ref)
   end
 
   defp notifier() do
