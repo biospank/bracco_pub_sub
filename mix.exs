@@ -26,7 +26,8 @@ defmodule BraccoPubSub.MixProject do
       {:jason, "~> 1.1"},
       {:ecto, "~> 3.0"},
       {:ecto_sql, "~> 3.0"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:distillery, "~> 2.0"}
     ]
   end
 end
