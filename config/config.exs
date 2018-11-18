@@ -4,13 +4,6 @@ use Mix.Config
 
 config :bracco_pub_sub, ecto_repos: [BraccoPubSub.Repo]
 
-config :bracco_pub_sub, BraccoPubSub.Repo,
-  database: "bracco",
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  pool_size: 1
-
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,
@@ -35,5 +28,5 @@ config :bracco_pub_sub, BraccoPubSub.Repo,
 # by uncommenting the line below and defining dev.exs, test.exs and such.
 # Configuration from the imported file will override the ones defined
 # here (which is why it is important to import them last).
-#
-#     import_config "#{Mix.env()}.exs"
+
+import_config "#{Mix.env()}.exs"
