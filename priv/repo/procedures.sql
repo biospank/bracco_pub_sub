@@ -20,14 +20,34 @@ CREATE TABLE public.tickets
   id serial primary key,
   title character varying NOT NULL,
   description character varying NOT NULL,
-  reporter_id integer,
-  assignee_id integer,
+  created_by integer,
+  assignees_id integer[],
   expire_date date,
   creation_date timestamp without time zone DEFAULT now(),
   archived boolean DEFAULT false,
   status integer DEFAULT 0,
   updated_at timestamp without time zone,
   updated_by integer
+);
+
+insert into tickets (title, description, created_by, assignees_id)
+values ('test', 'nuovo ticket', 2, '{3,4,5}');
+
+update tickets set description = 'old ticket', updated_by = 4 where id = <>;
+
+DROP TABLE public.documents;
+
+CREATE TABLE public.documents
+(
+  id serial primary key,
+  title varchar,
+  body_text text,
+  share_with integer[],
+  archived boolean default false,
+  created_by integer,
+  updated_by integer,
+  created_at date default now(),
+  update_at timestamp
 );
 
 -- Table: public.comments
@@ -84,6 +104,47 @@ AFTER INSERT OR UPDATE OR DELETE
 ON tickets
 FOR EACH ROW
 EXECUTE PROCEDURE notify_ticket_changes()
+
+CREATE OR REPLACE FUNCTION notify_document_changes()
+RETURNS trigger AS $$
+BEGIN
+  IF (TG_OP = 'DELETE') THEN
+    PERFORM pg_notify(
+      'documents_changed',
+      json_build_object(
+        'operation', TG_OP,
+        'table', 'documents',
+        'record', row_to_json(OLD)
+      )::text
+    );
+    RETURN OLD;
+  ELSE
+    PERFORM pg_notify(
+      'documents_changed',
+      json_build_object(
+        'operation', TG_OP,
+        'table', 'documents',
+        'record', row_to_json(NEW)
+      )::text
+    );
+    RETURN NEW;
+  END IF;
+
+  RETURN NULL;
+
+END;
+$$ LANGUAGE plpgsql;
+
+-- NEW — Data type RECORD; a variable holding the new database row for INSERT/UPDATE operations in row-level triggers.
+-- TG_OP — Data type text; a string of INSERT, UPDATE, DELETE, or TRUNCATE telling for which operation the trigger was fired.
+
+DROP TRIGGER IF EXISTS documents_changed on tickets;
+
+CREATE TRIGGER documents_changed
+AFTER INSERT OR UPDATE OR DELETE
+ON documents
+FOR EACH ROW
+EXECUTE PROCEDURE notify_document_changes()
 
 CREATE OR REPLACE FUNCTION notify_comment_changes()
 RETURNS trigger AS $$

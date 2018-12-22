@@ -35,6 +35,7 @@ defmodule BraccoPubSub.Router do
   defp loop(conn, listener_id) do
     receive do
       {:notification, _pid, _ref, "comments_changed", payload} ->
+        # Logger.info("comments changed payload: #{inspect payload}")
         with {:ok, comment} <- get_payload_record(payload),
              {:ok, ticket} <- get_ticket(comment),
              {:ok, :match} <- check_listener(ticket, listener_id) do
@@ -47,8 +48,21 @@ defmodule BraccoPubSub.Router do
 
         loop(conn, listener_id)
       {:notification, _pid, _ref, "tickets_changed", payload} ->
+        # Logger.info("tickets changed payload: #{inspect payload}")
         with {:ok, record} <- get_payload_record(payload),
              {:ok, :match} <- check_listener(record, listener_id) do
+
+          send_message(conn, payload)
+        else
+          error ->
+            Logger.error("error: #{inspect error}")
+        end
+
+        loop(conn, listener_id)
+      {:notification, _pid, _ref, "documents_changed", payload} ->
+        # Logger.info("documents changed payload: #{inspect payload}")
+        with {:ok, record} <- get_payload_record(payload),
+              {:ok, :match} <- check_listener(record, listener_id) do
 
           send_message(conn, payload)
         else
@@ -76,9 +90,27 @@ defmodule BraccoPubSub.Router do
   end
 
   defp check_listener(record, listener_id) do
+    Logger.info("listener_id: #{inspect listener_id}")
+    Logger.info("record: #{inspect record}")
     case record do
-      %{reporter_id: ^listener_id} -> {:ok, :match}
-      %{assignee_id: ^listener_id} -> {:ok, :match}
+      %{created_by: ^listener_id, updated_by: updater} -> # for ticket and comments
+        if updater != listener_id do
+          {:ok, :match}
+        else
+          {:error, :no_match}
+        end
+      %{share_with: assignees, updated_by: updater} -> # for comments
+        if listener_id in (assignees -- [updater]) do
+          {:ok, :match}
+        else
+          {:error, :no_match}
+        end
+      %{assignees_id: assignees, updated_by: updater} -> # for tickets
+        if listener_id in (assignees -- [updater]) do
+          {:ok, :match}
+        else
+          {:error, :no_match}
+        end
       _ -> {:error, :no_match}
     end
   end
