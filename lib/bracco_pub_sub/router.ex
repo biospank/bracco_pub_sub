@@ -90,8 +90,8 @@ defmodule BraccoPubSub.Router do
   end
 
   defp check_listener(record, listener_id) do
-    Logger.info("listener_id: #{inspect listener_id}")
-    Logger.info("record: #{inspect record}")
+    # Logger.info("listener_id: #{inspect listener_id}")
+    # Logger.info("record: #{inspect record}")
     case record do
       %{created_by: ^listener_id, updated_by: updater} -> # for ticket and comments
         if updater != listener_id do
