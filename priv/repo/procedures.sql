@@ -138,7 +138,7 @@ $$ LANGUAGE plpgsql;
 -- NEW — Data type RECORD; a variable holding the new database row for INSERT/UPDATE operations in row-level triggers.
 -- TG_OP — Data type text; a string of INSERT, UPDATE, DELETE, or TRUNCATE telling for which operation the trigger was fired.
 
-DROP TRIGGER IF EXISTS documents_changed on tickets;
+DROP TRIGGER IF EXISTS documents_changed on documents;
 
 CREATE TRIGGER documents_changed
 AFTER INSERT OR UPDATE OR DELETE

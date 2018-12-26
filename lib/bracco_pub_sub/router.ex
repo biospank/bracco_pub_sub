@@ -9,6 +9,12 @@ defmodule BraccoPubSub.Router do
   plug :match
   plug :dispatch
 
+  @events_type ~w(
+    tickets_changed
+    comments_changed
+    documents_changed
+  )
+
   get "/" do
     conn
     |> put_resp_header("content-type", "text/html")
@@ -19,9 +25,11 @@ defmodule BraccoPubSub.Router do
     conn = set_response_headers(conn)
     conn = send_chunked(conn, 200)
 
+    send_retry(conn)
+
     # Logger.info("Listening events for account: #{listener_id}")
 
-    with {:ok, refs} <- Listener.subscribe(~w(tickets_changed comments_changed)) do
+    with {:ok, refs} <- Listener.subscribe(@events_type) do
       loop(conn, String.to_integer(listener_id))
       Listener.unsubscribe(refs)
     else
@@ -71,8 +79,9 @@ defmodule BraccoPubSub.Router do
         end
 
         loop(conn, listener_id)
-    after :timer.seconds(400) ->
-      send_message(conn, "No available messages")
+    after :timer.seconds(60) ->
+      loop(conn, listener_id)
+      # send_message(conn, "No available messages")
     end
   end
 
@@ -124,7 +133,11 @@ defmodule BraccoPubSub.Router do
   end
 
   defp send_message(conn, message) do
-    chunk(conn, "event: \"message\"\n\ndata: {\"message\": #{message}}\n\n")
+    chunk(conn, "event: \"message\"\n\nretry: 200\n\ndata: {\"message\": #{message}}\n\n")
+  end
+
+  defp send_retry(conn) do
+    chunk(conn, "retry: 200\n\n")
   end
 
   defp send_error(conn, error) do
