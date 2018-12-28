@@ -6,6 +6,7 @@ defmodule BraccoPubSub.Router do
 
   alias BraccoPubSub.{Listener, Schemas.Ticket, Repo}
 
+  # plug Plug.Static, at: "/", from: :bracco_pub_sub
   plug :match
   plug :dispatch
 
@@ -14,6 +15,12 @@ defmodule BraccoPubSub.Router do
     comments_changed
     documents_changed
   )
+
+  # get "/" do
+  #   conn
+  #   |> put_resp_header("content-type", "text/html; charset=utf-8")
+  #   |> send_file(:ok, root())
+  # end
 
   get "/" do
     conn
@@ -143,4 +150,8 @@ defmodule BraccoPubSub.Router do
   defp send_error(conn, error) do
     chunk(conn, "event: \"error\"\n\ndata: {\"error\": #{inspect error}}\n\n")
   end
+
+  # defp root do
+  #   Enum.join([:code.priv_dir(:bracco_pub_sub), "/static/index.html"])
+  # end
 end
