@@ -37,6 +37,7 @@ end
 environment :prod do
   set include_erts: true
   set include_src: false
+  set post_start_hooks: "rel/hooks/post_start"
   set cookie: :">O7yQQmi:^fC5PqW(_`mPp5/r2;uLk&IZB:z:$qZPJ()HC>fzyP7dF6)F(9l((ar"
   set vm_args: "rel/vm.args"
 end
@@ -52,4 +53,3 @@ release :bracco_pub_sub do
     :runtime_tools
   ]
 end
-
