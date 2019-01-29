@@ -7,9 +7,9 @@ defmodule BraccoPubSub.Repo.Migrations.CreateDocuments do
       add(:body_text, :text)
       add(:archived, :boolean, default: false)
       add(:share_with, {:array, :integer}, default: [])
-      add(:created_at, :timestamp, default: "now()")
+      add(:created_at, :timestamp, default: fragment("now()"))
       add(:created_by, references(:accounts))
-      add(:updated_at, :timestamp, default: "now()")
+      add(:updated_at, :timestamp, default: fragment("now()"))
       add(:updated_by, references(:accounts))
     end
   end
