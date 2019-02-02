@@ -7,6 +7,8 @@ config :bracco_pub_sub, BraccoPubSub.Repo,
   hostname: "localhost",
   pool_size: 10
 
+config :bracco_pub_sub,
+  migration_dir: "/vagrant/priv/repo/migrations"
 
   # Release successfully built!
   # To start the release you have built, you can use one of the following tasks:
