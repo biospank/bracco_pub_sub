@@ -12,5 +12,7 @@ defmodule BraccoPubSub.Repo.Migrations.CreateDocuments do
       add(:updated_at, :timestamp, default: fragment("now()"))
       add(:updated_by, references(:accounts))
     end
+
+    create index(:documents, [:share_with])
   end
 end

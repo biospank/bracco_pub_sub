@@ -9,5 +9,8 @@ defmodule BraccoPubSub.Repo.Migrations.CreateComments do
       add(:created_at, :timestamp, default: fragment("now()"))
       add(:updated_at, :timestamp)
     end
+
+    create index(:comments, [:ticket_id])
+    create index(:comments, [:account_id])
   end
 end

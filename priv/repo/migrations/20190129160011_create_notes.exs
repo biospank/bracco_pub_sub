@@ -11,5 +11,7 @@ defmodule BraccoPubSub.Repo.Migrations.CreateNotes do
       add(:account_id, references(:accounts))
       add(:created_at, :timestamp, default: fragment("now()"))
     end
+
+    create index(:notes, [:account_id])
   end
 end

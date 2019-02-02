@@ -10,6 +10,7 @@ defmodule BraccoPubSub.Repo.Migrations.CreateAccounts do
       add(:confirm_psw, :string, null: false)
       add(:profile, :integer, null: false)
       add(:nickname, :string, null: false)
+      add(:mobilephone, :string)
       add(:status, :integer, default: 1)
       add(:avatar_color, :string, default: "pink")
       add(:online, :boolean, default: false)
