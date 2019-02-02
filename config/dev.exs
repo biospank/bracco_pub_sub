@@ -5,4 +5,4 @@ config :bracco_pub_sub, BraccoPubSub.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  pool_size: 1
+  pool_size: 5
