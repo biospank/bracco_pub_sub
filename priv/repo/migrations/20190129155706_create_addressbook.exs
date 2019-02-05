@@ -3,9 +3,9 @@ defmodule BraccoPubSub.Repo.Migrations.CreateAddressbook do
 
   def change do
     create table(:addressbook) do
-      add(:company, :string, null: false)
-      add(:firstname, :string, null: false)
-      add(:lastname, :string, null: false)
+      add(:company, :string)
+      add(:firstname, :string)
+      add(:lastname, :string)
       add(:email, :string)
       add(:vat_number, :string, limit: 11)
       add(:mobilephone, :string)

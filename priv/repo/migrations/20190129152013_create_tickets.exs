@@ -3,7 +3,7 @@ defmodule BraccoPubSub.Repo.Migrations.CreateTickets do
 
   def change do
     create table(:tickets) do
-      add(:title, :string, null: false)
+      add(:title, :string)
       add(:description, :text)
       add(:status, :integer, default: 0)
       add(:archived, :boolean, default: false)

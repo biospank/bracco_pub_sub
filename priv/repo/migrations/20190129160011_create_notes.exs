@@ -3,7 +3,7 @@ defmodule BraccoPubSub.Repo.Migrations.CreateNotes do
 
   def change do
     create table(:notes) do
-      add(:title, :string, null: false)
+      add(:title, :string)
       add(:description, :text)
       add(:archived, :boolean, default: false)
       add(:alarm_date, :date)

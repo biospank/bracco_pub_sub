@@ -3,13 +3,13 @@ defmodule BraccoPubSub.Repo.Migrations.CreateAccounts do
 
   def change do
     create table(:accounts) do
-      add(:firstname, :string, null: false)
-      add(:lastname, :string, null: false)
-      add(:email, :string, null: false)
-      add(:psw, :string, null: false)
-      add(:confirm_psw, :string, null: false)
-      add(:profile, :integer, null: false)
-      add(:nickname, :string, null: false)
+      add(:firstname, :string)
+      add(:lastname, :string)
+      add(:email, :string)
+      add(:psw, :string)
+      add(:confirm_psw, :string)
+      add(:profile, :integer)
+      add(:nickname, :string)
       add(:mobilephone, :string)
       add(:status, :integer, default: 1)
       add(:avatar_color, :string, default: "pink")

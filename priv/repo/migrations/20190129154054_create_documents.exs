@@ -3,7 +3,7 @@ defmodule BraccoPubSub.Repo.Migrations.CreateDocuments do
 
   def change do
     create table(:documents) do
-      add(:title, :string, null: false)
+      add(:title, :string)
       add(:body_text, :text)
       add(:archived, :boolean, default: false)
       add(:share_with, {:array, :integer}, default: [])
