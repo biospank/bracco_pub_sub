@@ -4,7 +4,7 @@ defmodule BraccoPubSub.Router do
 
   require Logger
 
-  alias BraccoPubSub.{Listener, Schemas.Ticket, Repo}
+  alias BraccoPubSub.{Listener, Schemas.Ticket, Schemas.Notification, Repo}
 
   # plug Plug.Static, at: "/", from: :bracco_pub_sub
   plug :match
@@ -55,6 +55,7 @@ defmodule BraccoPubSub.Router do
              {:ok, ticket} <- get_ticket(comment),
              {:ok, :match} <- check_listener(ticket, listener_id) do
 
+          store_notification(payload, listener_id)
           send_message(conn, payload)
         else
           error ->
@@ -67,6 +68,7 @@ defmodule BraccoPubSub.Router do
         with {:ok, record} <- get_payload_record(payload),
              {:ok, :match} <- check_listener(record, listener_id) do
 
+          store_notification(payload, listener_id)
           send_message(conn, payload)
         else
           error ->
@@ -79,6 +81,7 @@ defmodule BraccoPubSub.Router do
         with {:ok, record} <- get_payload_record(payload),
               {:ok, :match} <- check_listener(record, listener_id) do
 
+          store_notification(payload, listener_id)
           send_message(conn, payload)
         else
           error ->
@@ -103,6 +106,14 @@ defmodule BraccoPubSub.Router do
     payload
     |> Jason.decode!(keys: :atoms)
     |> Map.fetch(:record)
+  end
+
+  defp store_notification(payload, listener_id) do
+    payload
+    |> Jason.decode!(keys: :atoms)
+    |> Map.put(:recipient_id, listener_id)
+    |> Notification.create_changeset()
+    |> Repo.insert!()
   end
 
   defp check_listener(record, listener_id) do

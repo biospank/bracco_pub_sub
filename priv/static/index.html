@@ -11,7 +11,7 @@
 				}
 			}
 			function setupEventSource() {
-				var source = new EventSource('/bracco/2/events');
+				var source = new EventSource('/bracco/1/events');
 				source.addEventListener('message', function(event) {
 					addStatus("server sent the following: '" + event.data + "'");
 					}, false);
