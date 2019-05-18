@@ -4,7 +4,13 @@ defmodule BraccoPubSub.Router do
 
   require Logger
 
-  alias BraccoPubSub.{Listener, Schemas.Ticket, Schemas.Notification, Repo}
+  alias BraccoPubSub.{
+    Listener,
+    Hub,
+    Utils,
+    Schemas.Ticket,
+    Repo
+  }
 
   # plug Plug.Static, at: "/", from: :bracco_pub_sub
   plug :match
@@ -29,6 +35,7 @@ defmodule BraccoPubSub.Router do
   end
 
   get "/bracco/:listener_id/events" do
+    # IO.puts("Listening events for account: #{listener_id}")
     conn = set_response_headers(conn)
     conn = send_chunked(conn, 200)
 
@@ -49,26 +56,11 @@ defmodule BraccoPubSub.Router do
 
   defp loop(conn, listener_id) do
     receive do
-      {:notification, _pid, _ref, "comments_changed", payload} ->
-        # Logger.info("comments changed payload: #{inspect payload}")
-        with {:ok, comment} <- get_payload_record(payload),
-             {:ok, ticket} <- get_ticket(comment),
-             {:ok, :match} <- check_listener(ticket, listener_id) do
-
-          store_notification(payload, listener_id)
-          send_message(conn, payload)
-        else
-          error ->
-            Logger.error("error: #{inspect error}")
-        end
-
-        loop(conn, listener_id)
-      {:notification, _pid, _ref, "tickets_changed", payload} ->
+      {:notification, _pid, _ref, "tickets_changed" = event, payload} ->
         # Logger.info("tickets changed payload: #{inspect payload}")
-        with {:ok, record} <- get_payload_record(payload),
-             {:ok, :match} <- check_listener(record, listener_id) do
+        with {:ok, record} <- Utils.get_payload_record(payload),
+             {:ok, :match} <- Hub.match(event, listener_id, record) do
 
-          store_notification(payload, listener_id)
           send_message(conn, payload)
         else
           error ->
@@ -76,12 +68,22 @@ defmodule BraccoPubSub.Router do
         end
 
         loop(conn, listener_id)
-      {:notification, _pid, _ref, "documents_changed", payload} ->
-        # Logger.info("documents changed payload: #{inspect payload}")
-        with {:ok, record} <- get_payload_record(payload),
-              {:ok, :match} <- check_listener(record, listener_id) do
+      {:notification, _pid, _ref, "comments_changed" = event, payload} ->
+        # Logger.info("comments changed payload: #{inspect payload}")
+        with {:ok, comment} <- Utils.get_payload_record(payload),
+             {:ok, ticket} <- get_ticket(comment),
+             {:ok, :match} <- Hub.match(event, listener_id, ticket, comment) do
 
-          store_notification(payload, listener_id)
+          send_message(conn, payload)
+        else
+          error ->
+            Logger.error("error: #{inspect error}")
+        end
+      {:notification, _pid, _ref, "documents_changed" = event, payload} ->
+        # Logger.info("documents changed payload: #{inspect payload}")
+        with {:ok, record} <- Utils.get_payload_record(payload),
+              {:ok, :match} <- Hub.match(event, listener_id, record) do
+
           send_message(conn, payload)
         else
           error ->
@@ -102,45 +104,13 @@ defmodule BraccoPubSub.Router do
     end
   end
 
-  defp get_payload_record(payload) do
-    payload
-    |> Jason.decode!(keys: :atoms)
-    |> Map.fetch(:record)
-  end
-
-  defp store_notification(payload, listener_id) do
-    payload
-    |> Jason.decode!(keys: :atoms)
-    |> Map.put(:recipient_id, listener_id)
-    |> Notification.create_changeset()
-    |> Repo.insert!()
-  end
-
-  defp check_listener(record, listener_id) do
-    # Logger.info("listener_id: #{inspect listener_id}")
-    # Logger.info("record: #{inspect record}")
-    case record do
-      %{created_by: ^listener_id, updated_by: updater} -> # for ticket and comments
-        if updater != listener_id do
-          {:ok, :match}
-        else
-          {:error, :no_match}
-        end
-      %{share_with: assignees, updated_by: updater} -> # for comments
-        if listener_id in (assignees -- [updater]) do
-          {:ok, :match}
-        else
-          {:error, :no_match}
-        end
-      %{assignees_id: assignees, updated_by: updater} -> # for tickets
-        if listener_id in (assignees -- [updater]) do
-          {:ok, :match}
-        else
-          {:error, :no_match}
-        end
-      _ -> {:error, :no_match}
-    end
-  end
+  # defp store_notification(payload, listener_id) do
+  #   payload
+  #   |> Jason.decode!(keys: :atoms)
+  #   |> Map.put(:recipient_id, listener_id)
+  #   |> Notification.create_changeset()
+  #   |> Repo.insert!()
+  # end
 
   defp set_response_headers(conn) do
     conn

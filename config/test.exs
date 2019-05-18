@@ -5,4 +5,5 @@ config :bracco_pub_sub, BraccoPubSub.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
+  pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: 5
