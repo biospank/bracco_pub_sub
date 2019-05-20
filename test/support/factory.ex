@@ -2,7 +2,8 @@ defmodule BraccoPubSub.Factory do
   alias BraccoPubSub.Schemas.{
     Account,
     Ticket,
-    Comment
+    Comment,
+    Document
   }
   alias BraccoPubSub.Repo
 
@@ -37,6 +38,7 @@ defmodule BraccoPubSub.Factory do
         description: "Test description",
         archived: false,
         status: 0,
+        assignees_id: [],
         expire_at: Date.utc_today() |> Date.add(2),
         created_by: nil,
         created_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
@@ -45,19 +47,6 @@ defmodule BraccoPubSub.Factory do
       }
       |> Map.merge(Enum.into(attrs, %{}))
       |> Repo.insert!()
-    end)
-  end
-
-  def update_ticket(struct, attrs \\ []) do
-    Ecto.Adapters.SQL.Sandbox.unboxed_run(Repo, fn ->
-      struct
-      |> Ecto.Changeset.change(
-        Keyword.merge(
-          attrs,
-          updated_at: NaiveDateTime.utc_now() |> NaiveDateTime.add(2) |> NaiveDateTime.truncate(:second)
-        )
-      )
-      |> Repo.update!
     end)
   end
 
@@ -75,7 +64,24 @@ defmodule BraccoPubSub.Factory do
     end)
   end
 
-  def update_comment(struct, attrs \\ []) do
+  def create_document(attrs \\ []) do
+    Ecto.Adapters.SQL.Sandbox.unboxed_run(Repo, fn ->
+      %Document{
+        title: "Test title",
+        body_text: "Test description",
+        archived: false,
+        share_with: [],
+        created_by: nil,
+        created_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+        updated_by: nil,
+        updated_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+      }
+      |> Map.merge(Enum.into(attrs, %{}))
+      |> Repo.insert!()
+    end)
+  end
+
+  def update(struct, attrs \\ []) do
     Ecto.Adapters.SQL.Sandbox.unboxed_run(Repo, fn ->
       struct
       |> Ecto.Changeset.change(
