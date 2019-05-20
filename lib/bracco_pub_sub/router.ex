@@ -79,6 +79,8 @@ defmodule BraccoPubSub.Router do
           error ->
             Logger.error("error: #{inspect error}")
         end
+
+        loop(conn, listener_id)
       {:notification, _pid, _ref, "documents_changed" = event, payload} ->
         # Logger.info("documents changed payload: #{inspect payload}")
         with {:ok, record} <- Utils.get_payload_record(payload),
