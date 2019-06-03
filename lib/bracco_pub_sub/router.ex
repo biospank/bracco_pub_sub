@@ -41,7 +41,7 @@ defmodule BraccoPubSub.Router do
 
     send_retry(conn)
 
-    # Logger.info("Listening events for account: #{listener_id}")
+    Logger.info("Listening events for account: #{listener_id}")
 
     with {:ok, refs} <- Listener.subscribe(@events_type) do
       loop(conn, String.to_integer(listener_id))
@@ -61,6 +61,7 @@ defmodule BraccoPubSub.Router do
         with {:ok, record} <- Utils.get_payload_record(payload),
              {:ok, :match} <- Hub.match(event, listener_id, record) do
 
+          Logger.info("sending tickets_changed notification for listener: #{listener_id}")
           send_message(conn, payload)
         else
           error ->
@@ -74,6 +75,7 @@ defmodule BraccoPubSub.Router do
              {:ok, ticket} <- get_ticket(comment),
              {:ok, :match} <- Hub.match(event, listener_id, ticket, comment) do
 
+          Logger.info("sending comments_changed notification for listener: #{listener_id}")
           send_message(conn, payload)
         else
           error ->
@@ -86,6 +88,7 @@ defmodule BraccoPubSub.Router do
         with {:ok, record} <- Utils.get_payload_record(payload),
               {:ok, :match} <- Hub.match(event, listener_id, record) do
 
+          Logger.info("sending documents_changed notification for listener: #{listener_id}")
           send_message(conn, payload)
         else
           error ->
