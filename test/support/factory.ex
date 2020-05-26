@@ -3,7 +3,9 @@ defmodule BraccoPubSub.Factory do
     Account,
     Ticket,
     Comment,
-    Document
+    Document,
+    Chat,
+    Message
   }
   alias BraccoPubSub.Repo
 
@@ -91,6 +93,33 @@ defmodule BraccoPubSub.Factory do
         )
       )
       |> Repo.update!
+    end)
+  end
+
+  def create_chat(attrs \\ []) do
+    Ecto.Adapters.SQL.Sandbox.unboxed_run(Repo, fn ->
+      %Chat{
+        uuid: UUID.uuid4(),
+        name: "Test chat",
+        actor_ids: [],
+        created_by: nil,
+        created_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+      }
+      |> Map.merge(Enum.into(attrs, %{}))
+      |> Repo.insert!()
+    end)
+  end
+
+  def create_message(attrs \\ []) do
+    Ecto.Adapters.SQL.Sandbox.unboxed_run(Repo, fn ->
+      %Message{
+        chat: nil,
+        text: "Test message",
+        created_by: nil,
+        created_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+      }
+      |> Map.merge(Enum.into(attrs, %{}))
+      |> Repo.insert!()
     end)
   end
 end

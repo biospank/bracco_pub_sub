@@ -9,6 +9,7 @@ defmodule BraccoPubSub.Router do
     Hub,
     Utils,
     Schemas.Ticket,
+    Schemas.Chat,
     Repo
   }
 
@@ -20,6 +21,7 @@ defmodule BraccoPubSub.Router do
     tickets_changed
     comments_changed
     documents_changed
+    messages_changed
   )
 
   # get "/" do
@@ -83,6 +85,20 @@ defmodule BraccoPubSub.Router do
         end
 
         loop(conn, listener_id)
+      {:notification, _pid, _ref, "messages_changed" = event, payload} ->
+        Logger.info("messages changed payload: #{inspect payload}")
+        with {:ok, message} <- Utils.get_payload_record(payload),
+              {:ok, chat} <- get_chat(message),
+              {:ok, :match} <- Hub.match(event, listener_id, chat, message) do
+
+          Logger.info("sending messages_changed notification for listener: #{listener_id}")
+          send_message(conn, payload)
+        else
+          error ->
+            Logger.error("error: #{inspect error}")
+        end
+
+        loop(conn, listener_id)
       {:notification, _pid, _ref, "documents_changed" = event, payload} ->
         # Logger.info("documents changed payload: #{inspect payload}")
         with {:ok, record} <- Utils.get_payload_record(payload),
@@ -106,6 +122,13 @@ defmodule BraccoPubSub.Router do
     case Repo.get(Ticket, ticket_id) do
       nil -> {:error, :not_found}
       ticket -> {:ok, ticket}
+    end
+  end
+
+  defp get_chat(%{chat_uuid: chat_uuid}) do
+    case Repo.get(Chat, chat_uuid) do
+      nil -> {:error, :not_found}
+      chat -> {:ok, chat}
     end
   end
 

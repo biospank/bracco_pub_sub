@@ -37,5 +37,11 @@ defmodule BraccoPubSub.Hub do
       false -> {:error, :no_match}
     end
   end
+  def match("messages_changed", listener, %{actor_ids: actors}, %{created_by: creator}) when creator != listener do
+    case listener in actors do
+      true -> {:ok, :match}
+      false -> {:error, :no_match}
+    end
+  end
   def match(_, _, _, _), do: {:error, :no_match}
 end

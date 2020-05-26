@@ -479,4 +479,93 @@ defmodule BraccoPubSub.HubTest do
       assert {:ok, :match} = Hub.match(event, subscriber.id, record)
     end
   end
+
+  describe "match/3 publisher `messages_changed` event" do
+    setup do
+      event = "messages_changed"
+
+      Listener.subscribe(event)
+
+      publisher = Factory.create_account()
+      subscriber = Factory.create_account()
+      chat = Factory.create_chat(
+        created_by: publisher.id,
+        actor_ids: [
+          publisher.id,
+          subscriber.id
+        ]
+      )
+
+      {:ok, publisher: publisher, subscriber: subscriber, chat: chat, event: event}
+    end
+
+    test "publisher does not receive notifications on messages being created by himself",
+      %{publisher: publisher, chat: chat, event: event} do
+
+      Factory.create_message(
+        chat: chat,
+        created_by: publisher.id
+      )
+
+      assert_received {
+        :notification,
+        _pid,
+        _ref,
+        ^event,
+        payload
+      }
+
+      {:ok, record} = Utils.get_payload_record(payload)
+
+      assert {:error, :no_match} = Hub.match(event, publisher.id, chat, record)
+    end
+
+    test "subscriber receive notifications on messages created by others if he/she's a chat actor",
+      %{publisher: publisher, subscriber: subscriber, chat: chat, event: event} do
+
+      IO.puts "Chat actors: #{subscriber.id in chat.actor_ids}"
+
+      Factory.create_message(
+        chat: chat,
+        created_by: publisher.id
+      )
+
+      assert_received {
+        :notification,
+        _pid,
+        _ref,
+        ^event,
+        payload
+      }
+
+      {:ok, record} = Utils.get_payload_record(payload)
+
+      assert {:ok, :match} = Hub.match(event, subscriber.id, chat, record)
+    end
+
+    test "subscriber does not receive notifications on messages created by others if he/she's not a chat actor",
+      %{publisher: publisher, subscriber: subscriber, chat: chat, event: event} do
+
+      chat = %{chat | actor_ids: chat.actor_ids -- [subscriber.id]}
+
+      IO.puts "Chat actors: #{subscriber.id in chat.actor_ids}"
+
+      Factory.create_message(
+        chat: chat,
+        created_by: publisher.id
+      )
+
+      assert_received {
+        :notification,
+        _pid,
+        _ref,
+        ^event,
+        payload
+      }
+
+      {:ok, record} = Utils.get_payload_record(payload)
+
+      assert {:error, :no_match} = Hub.match(event, subscriber.id, chat, record)
+    end
+  end
 end
