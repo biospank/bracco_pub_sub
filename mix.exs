@@ -33,7 +33,7 @@ defmodule BraccoPubSub.MixProject do
       {:ecto_sql, "~> 3.0"},
       {:plug_cowboy, "~> 2.0"},
       {:distillery, "~> 2.0"},
-      {:uuid, "~> 1.1"}
+      {:uuid, "~> 1.1", only: [:dev, :test]}
     ]
   end
 

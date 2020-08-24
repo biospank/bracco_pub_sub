@@ -43,10 +43,10 @@ defmodule BraccoPubSub.HubTest do
       assert {:error, :no_match} = Hub.match(event, publisher.id, record)
     end
 
-    test "publisher does not receive notifications on tickets being created by himself and updated by himself",
-      %{publisher: publisher, event: event} do
+    test "publisher does not receive notifications on tickets being updated by himself",
+      %{publisher: publisher, subscriber: subscriber, event: event} do
       ticket = Factory.create_ticket(
-        created_by: publisher.id,
+        created_by: subscriber.id,
         updated_by: publisher.id,
         assignees_id: []
       )
@@ -70,7 +70,7 @@ defmodule BraccoPubSub.HubTest do
       assert {:error, :no_match} = Hub.match(event, publisher.id, record)
     end
 
-    test "publisher receive notifications on tickets created by himself and updated by others",
+    test "publisher receive notifications on tickets updated by others",
       %{publisher: publisher, subscriber: subscriber, event: event} do
 
       ticket = Factory.create_ticket(
@@ -159,6 +159,72 @@ defmodule BraccoPubSub.HubTest do
       {:ok, record} = Utils.get_payload_record(payload)
 
       assert {:ok, :match} = Hub.match(event, subscriber.id, record)
+    end
+  end
+
+  describe "match/3 listener `tickets_changed` event" do
+    setup do
+      event = "tickets_changed"
+
+      Listener.subscribe(event)
+
+      publisher = Factory.create_account()
+      subscriber = Factory.create_account()
+      listener = Factory.create_account()
+
+      {:ok, publisher: publisher, subscriber: subscriber, listener: listener, event: event}
+    end
+
+    test "listener does not receive notifications on tickets created/updated by others if not interested",
+      %{publisher: publisher, subscriber: subscriber, listener: listener, event: event} do
+
+      ticket = Factory.create_ticket(
+        created_by: publisher.id,
+        updated_by: publisher.id,
+        assignees_id: []
+      )
+
+      assert_received {:notification, _pid, _ref, ^event, _data}
+
+      Factory.update(ticket, updated_by: subscriber.id)
+
+      assert_received {
+        :notification,
+        _pid,
+        _ref,
+        ^event,
+        payload
+      }
+
+      {:ok, record} = Utils.get_payload_record(payload)
+
+      assert {:error, :no_match} = Hub.match(event, listener.id, record)
+    end
+
+    test "listener receives notifications on tickets created/updated by others if interested",
+      %{publisher: publisher, subscriber: subscriber, listener: listener, event: event} do
+
+      ticket = Factory.create_ticket(
+        created_by: publisher.id,
+        updated_by: publisher.id,
+        assignees_id: [listener.id]
+      )
+
+      assert_received {:notification, _pid, _ref, ^event, _data}
+
+      Factory.update(ticket, updated_by: subscriber.id)
+
+      assert_received {
+        :notification,
+        _pid,
+        _ref,
+        ^event,
+        payload
+      }
+
+      {:ok, record} = Utils.get_payload_record(payload)
+
+      assert {:ok, :match} = Hub.match(event, listener.id, record)
     end
   end
 
@@ -325,6 +391,74 @@ defmodule BraccoPubSub.HubTest do
       }
 
       assert {:ok, :match} = Hub.match(event, subscriber.id, ticket, comment)
+    end
+  end
+
+  describe "match/3 listener `comments_changed` event" do
+    setup do
+      event = "comments_changed"
+
+      Listener.subscribe(event)
+
+      publisher = Factory.create_account()
+      subscriber = Factory.create_account()
+      listener = Factory.create_account()
+
+      {:ok, publisher: publisher, subscriber: subscriber, listener: listener, event: event}
+    end
+
+    test "does not receive notifications on ticket's comment if not interested",
+      %{publisher: publisher, subscriber: subscriber, listener: listener, event: event} do
+
+      ticket = Factory.create_ticket(
+        created_by: publisher.id,
+        updated_by: publisher.id,
+        assignees_id: [subscriber.id]
+      )
+
+      comment = Factory.create_comment(
+        ticket_id: ticket.id,
+        account_id: publisher.id
+      )
+
+      assert_received {:notification, _pid, _ref, ^event, _data}
+
+      comment = Factory.update(comment, account_id: subscriber.id)
+
+      assert_received {
+        :notification,
+        _pid,
+        _ref,
+        ^event,
+        _data
+      }
+
+      assert {:error, :no_match} = Hub.match(event, listener.id, ticket, comment)
+    end
+
+    test "receive notifications on ticket's comments he is interested in",
+      %{publisher: publisher, subscriber: subscriber, listener: listener, event: event} do
+
+      ticket = Factory.create_ticket(
+        created_by: publisher.id,
+        updated_by: publisher.id,
+        assignees_id: [listener.id]
+      )
+
+      comment = Factory.create_comment(
+        ticket_id: ticket.id,
+        account_id: publisher.id
+      )
+
+      assert_received {
+        :notification,
+        _pid,
+        _ref,
+        ^event,
+        _data
+      }
+
+      assert {:ok, :match} = Hub.match(event, listener.id, ticket, comment)
     end
   end
 
@@ -523,8 +657,6 @@ defmodule BraccoPubSub.HubTest do
     test "subscriber receive notifications on messages created by others if he/she's a chat actor",
       %{publisher: publisher, subscriber: subscriber, chat: chat, event: event} do
 
-      IO.puts "Chat actors: #{subscriber.id in chat.actor_ids}"
-
       Factory.create_message(
         chat: chat,
         created_by: publisher.id
@@ -547,8 +679,6 @@ defmodule BraccoPubSub.HubTest do
       %{publisher: publisher, subscriber: subscriber, chat: chat, event: event} do
 
       chat = %{chat | actor_ids: chat.actor_ids -- [subscriber.id]}
-
-      IO.puts "Chat actors: #{subscriber.id in chat.actor_ids}"
 
       Factory.create_message(
         chat: chat,
